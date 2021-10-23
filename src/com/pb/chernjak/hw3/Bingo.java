@@ -10,7 +10,7 @@ public class Bingo {
         System.out.println("Приветствую! В игре было загадано целое число в диапазоне от 0 до 100.");
         System.out.println("Попробуйте угадать загаданное число. Если захотите выйти, введите exit\n");
 
-        int random = (int)(Math.random()*100);
+        int random = (int)(Math.random()*101);
 //        System.out.println(random);
 
         int inputNum;
