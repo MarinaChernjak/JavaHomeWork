@@ -4,12 +4,15 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import java.io.BufferedWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.function.Predicate;
 
@@ -28,13 +31,25 @@ public class Main {
         }
     }
 
-    static int FindContact(List<Person> persons, String name) {
+    public static int FindContact(List<Person> persons, String name) {
         for (int i = 0; i < persons.size(); i++) {
             if (name.equals(persons.get(i).getName())) {
                 return i;
             }
         }
         return -1;
+    }
+
+    public static ArrayList<String> ScanPhones(Scanner scan) {
+        ArrayList<String> phones = new ArrayList<>();
+        for (int i = 0; i < 100; i++) {
+            String scanPhone = scan.next();
+            if (scanPhone.equals("0")) {
+                return phones;
+            }
+            phones.add(scanPhone);
+        }
+        return phones;
     }
 
     public static void main(String[] args) throws JsonProcessingException {
@@ -45,6 +60,9 @@ public class Main {
 
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
+
+        JavaTimeModule module = new JavaTimeModule();
+        objectMapper.registerModule(module);
 
         Path phoneBookPath = Paths.get(PHONEBOOK_FILE_PATH);
         try {
@@ -63,26 +81,44 @@ public class Main {
         String scanName;
         String scanAddress;
         String scanPhone;
-        String scanDateOfBirth;
+        LocalDate scanDateOfBirth;
         String scanModifyTime;
+        int scanCountPhones;
 
         while (flag) {
+            int option;
             System.out.print("Введите цифру, соответствующую нужной опции : ");
-            int option = scan.nextInt();
+            try {
+                option = scan.nextInt();
+            } catch (Exception e) {
+                System.out.println("Ошибка ввода нужной опции! Введите число от 0 до 5");
+                scan.next();
+                continue;
+            }
 
             switch (option) {
                 case 1:
                     System.out.println("Введите данные нового элемента:");
                     System.out.print("ФИО : ");
                     scanName = scan.next();
+
                     System.out.print("Адрес : ");
                     scanAddress = scan.next();
-                    System.out.print("Телефон : ");
-                    scanPhone = scan.next();
-                    System.out.print("Дата рождения в формате год/месяц/день : ");
-                    scanDateOfBirth = scan.next();
+
+                    System.out.print("Дата рождения в формате год-месяц-день : ");
+                    try {
+                        scanDateOfBirth = LocalDate.parse(scan.next());
+                    } catch (DateTimeParseException e) {
+                        System.out.println("Ошибка ввода даты рождения : " + e.getMessage());
+                        continue;
+                    }
+
+                    System.out.println("Введите номера телефонов (не более 5). Если номеров больше нет, введите 0:");
+                    ArrayList<String> phones = ScanPhones(scan);
+
                     scanModifyTime = LocalDateTime.now().toString();
-                    persons.add(new Person(scanName, scanAddress, scanDateOfBirth, scanPhone, scanModifyTime));
+
+                    persons.add(new Person(scanName, scanAddress, scanDateOfBirth, phones, scanModifyTime));
                     break;
                 case 2:
                     System.out.print("Введите ФИО элемента, который нужно удалить: ");
@@ -101,11 +137,24 @@ public class Main {
                     break;
                 }
                 case 4:
-                    System.out.println("Выберите критерий сортировки:");
-                    System.out.println("1 - сортировка по имени");
-                    System.out.println("2 - сортировка по дате рождения");
-                    int parametr = scan.nextInt();
-                    switch (parametr) {
+                    int parameter;
+                    while (true) {
+                        System.out.println("Выберите критерий сортировки:");
+                        System.out.println("1 - сортировка по имени");
+                        System.out.println("2 - сортировка по дате рождения");
+                        try {
+                            parameter = scan.nextInt();
+                            if (parameter < 1 || parameter > 2) {
+                                System.out.println("Ошибка ввода нужного параметра для сортировки! Введите число 1 или 2");
+                                continue;
+                            }
+                            break;
+                        } catch (Exception e) {
+                            System.out.println("Ошибка ввода нужного параметра для сортировки! Введите число 1 или 2");
+                            scan.next();
+                        }
+                    }
+                    switch (parameter) {
                         case 1:
                             System.out.println("Контакты были отсортированы по ФИО: ");
                             persons.sort(Comparator.comparing(p -> p.getName()));
@@ -115,6 +164,7 @@ public class Main {
                             persons.sort(Comparator.comparing(p -> p.getDateOfBirth()));
                             break;
                         default:
+                            System.out.println("Нет возможности отсортировать по выбранному критерию.");
                             break;
                     }
                     break;
@@ -130,10 +180,10 @@ public class Main {
                         persons.get(i).setName(scan.next());
                         System.out.print("Адрес : ");
                         persons.get(i).setAddress(scan.next());
-                        System.out.print("Телефон : ");
-                        persons.get(i).setPhones(scan.next());
                         System.out.print("Дата рождения в формате год/месяц/день : ");
-                        persons.get(i).setDateOfBirth(scan.next());
+                        persons.get(i).setDateOfBirth(LocalDate.parse(scan.next()));
+                        System.out.println("Введите номера телефонов (не более 5). Если номеров больше нет, введите 0 :");
+                        persons.get(i).setPhones(ScanPhones(scan));
                         persons.get(i).setModifyTime(LocalDateTime.now().toString());
                     }
                     break;

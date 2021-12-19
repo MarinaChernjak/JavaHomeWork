@@ -1,22 +1,25 @@
 package com.pb.chernjak.hw11;
 
+import java.time.LocalDate;
+import java.util.ArrayList;
+
 public class Person implements Comparable<Person>{
 
     private String name;
     private String address;
-    private String dateOfBirth;
-    private String phones;
+    private LocalDate dateOfBirth;
+    private ArrayList<String> phones;
     private String modifyTime;
 
     public Person() {
         this.name = "";
         this.address = "";
-        this.dateOfBirth = "";
-        this.phones = "";
+        this.dateOfBirth = LocalDate.now();
+        this.phones = new ArrayList<>();
         this.modifyTime = "";
     }
 
-    public Person(String name, String address, String dateOfBirth, String phones, String modifyTime) {
+    public Person(String name, String address, LocalDate dateOfBirth, ArrayList<String> phones, String modifyTime) {
         this.name = name;
         this.address = address;
         this.dateOfBirth = dateOfBirth;
@@ -32,11 +35,11 @@ public class Person implements Comparable<Person>{
         return address;
     }
 
-    public String getDateOfBirth() {
+    public LocalDate getDateOfBirth() {
         return dateOfBirth;
     }
 
-    public String getPhones() {
+    public ArrayList<String> getPhones() {
         return phones;
     }
 
@@ -52,11 +55,11 @@ public class Person implements Comparable<Person>{
         this.address = address;
     }
 
-    public void setDateOfBirth(String dateOfBirth) {
+    public void setDateOfBirth(LocalDate dateOfBirth) {
         this.dateOfBirth = dateOfBirth;
     }
 
-    public void setPhones(String phones) {
+    public void setPhones(ArrayList<String> phones) {
         this.phones = phones;
     }
 
