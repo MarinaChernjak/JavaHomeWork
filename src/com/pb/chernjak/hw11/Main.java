@@ -15,13 +15,14 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 public class Main {
 
     private static final String PHONEBOOK_FILE_PATH = "files/phonebook.json";
 
     static class NameTester implements Predicate<Person> {
-        private String name;
+        private final String name;
         public NameTester(String name) {
             this.name = name;
         }
@@ -52,6 +53,13 @@ public class Main {
         return phones;
     }
 
+    static class PersonNameComparator implements Comparator<Person> {
+        @Override
+        public int compare(Person a, Person b) {
+            return a.getName().compareTo(b.getName());
+        }
+    }
+
     public static void main(String[] args) throws JsonProcessingException {
 
         List<Person> persons = new ArrayList<>();
@@ -77,13 +85,13 @@ public class Main {
         System.out.println(" 3 - поиск элемента");
         System.out.println(" 4 - сортировка элементов");
         System.out.println(" 5 - редактирование элемента");
+        System.out.println(" 6 - вывести все элементы");
         System.out.println(" 0 - завершить работу с телефонной книгой");
         String scanName;
         String scanAddress;
         String scanPhone;
         LocalDate scanDateOfBirth;
         String scanModifyTime;
-        int scanCountPhones;
 
         while (flag) {
             int option;
@@ -120,22 +128,31 @@ public class Main {
 
                     persons.add(new Person(scanName, scanAddress, scanDateOfBirth, phones, scanModifyTime));
                     break;
+
                 case 2:
                     System.out.print("Введите ФИО элемента, который нужно удалить: ");
                     scanName = scan.next();
                     persons.removeIf(new NameTester(scanName));
                     break;
+
                 case 3: {
                     System.out.println("Введите ФИО, чтобы найти контакт: ");
                     scanName = scan.next();
-                    int i = FindContact(persons, scanName);
-                    if (i < 0) {
-                        System.out.println("Контакт с указанным именем не найден.");
-                    } else {
-                        System.out.println(persons.get(i).toString());
-                    }
+                    //Поиск с помощью StreamAPI
+                    persons.stream()
+                            .filter(new NameTester(scanName))
+                            .forEach(System.out::println);
+                    //Линейный посик в цикле
+//                    int i = FindContact(persons, scanName);
+//                    if (i < 0) {
+//                        System.out.println("Контакт с указанным именем не найден.");
+//                    } else {
+//                        System.out.println(persons.get(i).toString());
+//                    }
+
                     break;
                 }
+
                 case 4:
                     int parameter;
                     while (true) {
@@ -157,17 +174,38 @@ public class Main {
                     switch (parameter) {
                         case 1:
                             System.out.println("Контакты были отсортированы по ФИО: ");
-                            persons.sort(Comparator.comparing(p -> p.getName()));
+                            //сортировка с помощью Comparator
+//                            persons.sort(new PersonNameComparator());
+                            //сортировка с помощью лямбда
+//                            persons.sort(Comparator.comparing(p -> p.getName()));
+                            //сортировка с помощью StreamAPI
+                            persons = persons.stream()
+                                    .sorted(Comparator.comparing(Person::getName))
+                                    .collect(Collectors.toList());
                             break;
                         case 2:
                             System.out.println("Контакты были отсортированы по дате рождения: ");
-                            persons.sort(Comparator.comparing(p -> p.getDateOfBirth()));
+                            //Сортировка с помощью Comparator
+//                            persons.sort(new Comparator<Person>() {
+//                                @Override
+//                                public int compare(Person o1, Person o2) {
+//                                    return o1.getDateOfBirth().compareTo(o2.getDateOfBirth());
+//                                }
+//                            });
+                            //Сортировка с помощью лямбды
+//                          persons.sort(Comparator.comparing(p -> p.getDateOfBirth()));
+                            //Сортировка с помощью StreamAPI
+                            persons = persons.stream()
+                                    .sorted((o1, o2) -> o1.getDateOfBirth().compareTo(o2.getDateOfBirth()))
+                                    .collect(Collectors.toList());
+
                             break;
                         default:
                             System.out.println("Нет возможности отсортировать по выбранному критерию.");
                             break;
                     }
                     break;
+
                 case 5: {
                     System.out.println("Введите элемент, который нужно отредактировать (ФИО) : ");
                     scanName = scan.next();
@@ -188,6 +226,11 @@ public class Main {
                     }
                     break;
                 }
+                case 6:
+                    System.out.println("Список элементов телефонной книги:");
+                    persons.stream()
+                            .forEach(System.out::println);
+                    break;
                 case 0:
                     flag = false;
                     System.out.println("Завершение работы");
