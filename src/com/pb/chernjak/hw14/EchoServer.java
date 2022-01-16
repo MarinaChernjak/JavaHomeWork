@@ -12,9 +12,7 @@ public class EchoServer {
     static class Handler implements Runnable {
         private final Socket socket;
 
-        public Handler(Socket socket) {
-            this.socket = socket;
-        }
+        public Handler(Socket socket) { this.socket = socket; }
 
         @Override
         public void run() {
@@ -22,13 +20,16 @@ public class EchoServer {
                 System.out.println(Thread.currentThread().getName() + ". Подключился новый клиент");
 
                 BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-                BufferedWriter out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
-                String clientMessage = in.readLine();
-                System.out.println("Запрос клиента: \n" + clientMessage);
+                PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
 
-                //отправляем ответ
-                Thread.sleep(5000);
-                out.write(LocalDateTime.now().toString() + " -> " + clientMessage);
+                String clientMessage;
+                while ((clientMessage = in.readLine()) != null) {
+                    System.out.println("Запрос клиента: \n" + clientMessage);
+                    //отправляем ответ
+                    out.println(LocalDateTime.now().toString() + " -> " + clientMessage);
+                    if (clientMessage.equalsIgnoreCase("exit"))
+                        break;
+                }
 
                 out.close();
                 in.close();
@@ -51,7 +52,6 @@ public class EchoServer {
         System.out.println("Сервер запущен на порту : " + port);
         ExecutorService threadPool = Executors.newFixedThreadPool(10);
 
-        //ожидаем ответ от клиента
         while (true) {
             System.out.println("Ожидаем новое подключение...");
             Socket clientSocket = echoServer.accept();
